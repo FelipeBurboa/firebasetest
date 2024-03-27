@@ -18,25 +18,18 @@ const App = () => {
   const signUp = (e) => {
     e.preventDefault();
     createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        //ACCESSTOKEN
-        const token = userCredential.user.accessToken;
-        console.log("ACCESSTOKEN:", token);
-        //UID
-        const id = user.uid;
-        console.log("UID:", id);
-        //EMAIL
-        const mail = user.email;
-        console.log("EMAIL:", mail);
+      .then(async (userCredential) => {
+        const idToken = await userCredential.user.getIdToken();
 
-        //Lo que se manda al endpoint
-        const newUser = {
-          userId: user.uid,
-          email: email,
-          userCompleted: false,
-        };
-        console.log(newUser);
+        if (idToken) {
+          fetch("https://c16-backend.onrender.com/api/users", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${idToken}`,
+            },
+          });
+        }
       })
       .catch((error) => {
         const errorCode = error.code;
@@ -48,16 +41,9 @@ const App = () => {
   const signIn = (e) => {
     e.preventDefault();
     signInWithEmailAndPassword(auth, loginEmail, loginPassword)
-      .then((userCredential) => {
-        //ACCESSTOKEN
-        const token = userCredential.user.accessToken;
-        console.log("ACCESSTOKEN:", token);
-        //UID
-        const id = userCredential.user.uid;
-        console.log("UID:", id);
-        //EMAIL
-        const mail = userCredential.user.email;
-        console.log("EMAIL:", mail);
+      .then(async (userCredential) => {
+        const idToken = await userCredential.user.getIdToken();
+        console.log(idToken);
       })
       .catch((error) => {
         const errorCode = error.code;
@@ -70,20 +56,18 @@ const App = () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider).then((result) => {
       setEmailGoogle(result.user.email);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      //ACCESSTOKEN
-      const token = credential.accessToken;
-      console.log("ACCESSTOKEN:", token);
-      //UID
-      const id = result.user.uid;
-      console.log("UID:", id);
-      //EMAIL
-      const mail = result.user.email;
-      console.log("EMAIL:", mail);
 
-      //Lo que se manda al endpoint
-      //Devolveria nuevo user solo si no existe en la base de datos
-      //Pero si existe, devuelve el user existente
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      console.log(credential);
+
+      fetch("https://c16-backend.onrender.com/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       const newUser = {
         userId: result.user.uid,
         email: result.user.email,
