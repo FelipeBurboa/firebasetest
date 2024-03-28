@@ -5,8 +5,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-
 import { auth } from "./firebase";
+
 
 const App = () => {
   const [email, setEmail] = useState("");
@@ -22,14 +22,15 @@ const App = () => {
         const idToken = await userCredential.user.getIdToken();
 
         if (idToken) {
-          fetch("https://c16-backend.onrender.com/api/users", {
+          fetch("http://localhost:3000/api/users", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${idToken}`,
+              "Authorization": `Bearer ${idToken}`,
             },
           });
         }
+        alert("Usuario registrado! Inicie sesión para continuar.");
       })
       .catch((error) => {
         const errorCode = error.code;
@@ -44,6 +45,7 @@ const App = () => {
       .then(async (userCredential) => {
         const idToken = await userCredential.user.getIdToken();
         console.log(idToken);
+        alert("Inicio de sesion satisfactorio");
       })
       .catch((error) => {
         const errorCode = error.code;
@@ -52,29 +54,29 @@ const App = () => {
       });
   };
 
+  //https://c16-backend.onrender.com/api/users
+
   const signInWithGoogle = () => {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).then((result) => {
-      setEmailGoogle(result.user.email);
-
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      console.log(credential);
-
-      fetch("https://c16-backend.onrender.com/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const newUser = {
-        userId: result.user.uid,
-        email: result.user.email,
-        userCompleted: false,
-      };
-      console.log(newUser);
-    });
+    signInWithPopup(auth, provider)
+      .then( async (result) => {
+        setEmailGoogle(result.user.email);
+        const idToken = await result.user.getIdToken();
+        
+        fetch("http://localhost:3000/api/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`
+          },
+        });
+        alert("Se ha logueado con exito usando google!");
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode, errorMessage);
+      })
   };
 
   return (
