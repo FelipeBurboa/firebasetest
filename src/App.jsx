@@ -22,7 +22,7 @@ const App = () => {
         const idToken = await userCredential.user.getIdToken();
 
         if (idToken) {
-          fetch("http://localhost:3000/api/users", {
+          fetch("https://c16-backend.onrender.com/api/users", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -30,7 +30,6 @@ const App = () => {
             },
           });
         }
-        alert("Usuario registrado! Inicie sesión para continuar.");
       })
       .catch((error) => {
         const errorCode = error.code;
@@ -45,7 +44,6 @@ const App = () => {
       .then(async (userCredential) => {
         const idToken = await userCredential.user.getIdToken();
         console.log(idToken);
-        alert("Inicio de sesion satisfactorio");
       })
       .catch((error) => {
         const errorCode = error.code;
@@ -54,7 +52,6 @@ const App = () => {
       });
   };
 
-  //https://c16-backend.onrender.com/api/users
 
   const signInWithGoogle = () => {
     const provider = new GoogleAuthProvider();
@@ -63,14 +60,13 @@ const App = () => {
         setEmailGoogle(result.user.email);
         const idToken = await result.user.getIdToken();
         
-        fetch("http://localhost:3000/api/users", {
+        fetch("https://c16-backend.onrender.com/api/users", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${idToken}`
           },
         });
-        alert("Se ha logueado con exito usando google!");
       })
       .catch((error) => {
         const errorCode = error.code;
