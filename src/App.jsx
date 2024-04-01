@@ -20,14 +20,26 @@ const App = () => {
     createUserWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => {
         const idToken = await userCredential.user.getIdToken();
-
+  
         if (idToken) {
-          fetch("https://c16-backend.onrender.com/api/users", {
+          return fetch("https://c16-backend.onrender.com/api/users", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${idToken}`,
             },
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(user => {
+            console.log(user);
+          })
+          .catch(error => {
+            console.error('Error during fetch:', error);
           });
         }
       })
@@ -37,6 +49,7 @@ const App = () => {
         console.log(errorCode, errorMessage);
       });
   };
+  
 
   const signIn = (e) => {
     e.preventDefault();
@@ -60,13 +73,27 @@ const App = () => {
         setEmailGoogle(result.user.email);
         const idToken = await result.user.getIdToken();
         
-        fetch("https://c16-backend.onrender.com/api/users", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${idToken}`
-          },
-        });
+        if (idToken) {
+          return fetch("https://c16-backend.onrender.com/api/users", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${idToken}`,
+            },
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(user => {
+            console.log(user);
+          })
+          .catch(error => {
+            console.error('Error during fetch:', error);
+          });
+        }
       })
       .catch((error) => {
         const errorCode = error.code;
