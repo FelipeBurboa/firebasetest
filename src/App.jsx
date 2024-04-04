@@ -6,7 +6,7 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { auth } from "./firebase";
-
+import { getData } from "./hooks/useGetData";
 
 const App = () => {
   const [email, setEmail] = useState("");
@@ -20,27 +20,27 @@ const App = () => {
     createUserWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => {
         const idToken = await userCredential.user.getIdToken();
-  
+
         if (idToken) {
-          return fetch("https://c16-backend.onrender.com/api/users", {
+          return fetch("http://localhost:3000/api/users", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${idToken}`,
+              Authorization: `Bearer ${idToken}`,
             },
           })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(user => {
-            console.log(user);
-          })
-          .catch(error => {
-            console.error('Error during fetch:', error);
-          });
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("Network response was not ok");
+              }
+              return response.json();
+            })
+            .then((user) => {
+              console.log(user);
+            })
+            .catch((error) => {
+              console.error("Error during fetch:", error);
+            });
         }
       })
       .catch((error) => {
@@ -49,7 +49,6 @@ const App = () => {
         console.log(errorCode, errorMessage);
       });
   };
-  
 
   const signIn = (e) => {
     e.preventDefault();
@@ -65,46 +64,80 @@ const App = () => {
       });
   };
 
-
   const signInWithGoogle = () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider)
-      .then( async (result) => {
+      .then(async (result) => {
         setEmailGoogle(result.user.email);
         const idToken = await result.user.getIdToken();
-        
+
         if (idToken) {
           return fetch("https://c16-backend.onrender.com/api/users", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${idToken}`,
+              Authorization: `Bearer ${idToken}`,
             },
           })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(user => {
-            console.log(user);
-          })
-          .catch(error => {
-            console.error('Error during fetch:', error);
-          });
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("Network response was not ok");
+              }
+              return response.json();
+            })
+            .then((user) => {
+              console.log(user);
+            })
+            .catch((error) => {
+              console.error("Error during fetch:", error);
+            });
         }
       })
       .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
         console.log(errorCode, errorMessage);
-      })
+      });
   };
+
+  //CODIGO PARA RECIBIR Y DESCARGAR EXCEL RECIBIDO DESDE EL ENDPOINT
+  //Estoy usando import { getData } from "./hooks/useGetData";
+  const handleClick = async () => {
+    try {
+      const response = await getData(
+        "http://localhost:3000/api/users/downloadExcel",
+        "GET"
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to download Excel file");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(new Blob([blob]));
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "Usuarios.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading Excel file:", error);
+    }
+  };
+  //AQUI TERMINA. El boton esta abajito
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center h-screen">
+      <div className="flex flex-col items-center justify-center mb-5">
+        <h1 className="text-3xl font-bold mb-5">Excel</h1>
+        <div className="border p-4  border-sky-500 mb-2 w-[400px] flex flex-col">
+          <button onClick={handleClick} className="btn-primary bg-sky-500">
+            Descargar Excel
+          </button>
+        </div>
+        <h1 className="text-3xl font-bold mb-5">Sesiones</h1>
         <div className="border p-4  border-sky-500 mb-5 w-[400px]">
           <div>
             <h1 className="text-xl font-bold mb-2">
