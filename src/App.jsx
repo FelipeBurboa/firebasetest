@@ -4,11 +4,14 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  signOut,
 } from "firebase/auth";
 import { auth } from "./firebase";
 import { getData } from "./hooks/useGetData";
+import { useAuth } from "./utils/authContext";
 
 const App = () => {
+  const { currentUser, setCurrentUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
@@ -55,7 +58,26 @@ const App = () => {
     signInWithEmailAndPassword(auth, loginEmail, loginPassword)
       .then(async (userCredential) => {
         const idToken = await userCredential.user.getIdToken();
-        console.log(idToken);
+        const uid = userCredential.user.uid;
+        if (idToken) {
+          return fetch(`https://c16-backend.onrender.com/api/users/${uid}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${idToken}`,
+            },
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("Network response was not ok");
+              }
+              setCurrentUser(userCredential.user);
+              return response.json();
+            })
+            .catch((error) => {
+              console.error("Error during fetch:", error);
+            });
+        }
       })
       .catch((error) => {
         const errorCode = error.code;
@@ -126,8 +148,31 @@ const App = () => {
       console.error("Error downloading Excel file:", error);
     }
   };
-  //AQUI TERMINA. El boton esta abajito
+  //AQUI TERMINA
 
+  //CODIGO DE LOGOUT PARA CERRAR SESION FIREBASE Y BORRAR USER LOCALMENTE
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setCurrentUser(null);
+      console.log("User signed out successfully");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
+  //Por lo que entendi cada vez que yo uso getIdToken firebase mismo se preocupa de darme un token valido
+  //Sobretodo si expiro. Pero mi currentUser guardado en el localStorage no expira.
+  const getToken = async () => {
+    try {
+      const idToken = await currentUser.getIdToken();
+      console.log(idToken);
+    } catch (error) {
+      console.error("Error getting ID token:", error);
+    }
+  };
+
+  //AQUI TERMINA
   return (
     <>
       <div className="flex flex-col items-center justify-center mb-5">
@@ -138,6 +183,29 @@ const App = () => {
           </button>
         </div>
         <h1 className="text-3xl font-bold mb-5">Sesiones</h1>
+
+        {/* Codigo para cerrar sesion si el usuario ya ha iniciado sesion */}
+        {currentUser && (
+          <div className="border p-4 border-sky-500 mb-5 w-[400px] flex flex-col">
+            <button className="btn-primary bg-sky-500" onClick={getToken}>
+              Test get ID, fijate en el consolelog
+            </button>
+            <div>
+              <h1 className="text-xl font-bold mb-2">Cerrar sesion</h1>
+              <p className="mb-2">
+                Email: <span className="font-bold">{currentUser?.email}</span>
+              </p>
+              <p className="mb-2">
+                UID: <span className="font-bold">{currentUser?.uid}</span>
+              </p>
+            </div>
+            <button onClick={handleLogout} className="btn-primary bg-sky-500">
+              Logout
+            </button>
+          </div>
+        )}
+        {/* Aqui termina */}
+
         <div className="border p-4  border-sky-500 mb-5 w-[400px]">
           <div>
             <h1 className="text-xl font-bold mb-2">
